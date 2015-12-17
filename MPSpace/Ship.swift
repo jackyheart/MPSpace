@@ -34,8 +34,8 @@ class Ship: UIView {
         super.init(frame: frame)
         
         //border
-        self.layer.borderColor = UIColor.yellowColor().CGColor
-        self.layer.borderWidth = 2.0
+        //self.layer.borderColor = UIColor.yellowColor().CGColor
+        //self.layer.borderWidth = 2.0
         
         //ImageView
         let image = UIImage(named: imageName)!
