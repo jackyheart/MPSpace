@@ -15,7 +15,6 @@ class LaserView: UIImageView {
     @IBInspectable var shadowOpacity:Float = 0.9
     @IBInspectable var shadowOffset:CGSize = CGSizeMake(0.0, -3.0);
     var direction:CGFloat = 1
-    private var playerIndex = 1
 
     //cyan: A3EEFF
     
@@ -27,15 +26,16 @@ class LaserView: UIImageView {
         super.init(coder: aDecoder)
     }
     
-    init(frame:CGRect, playerIndex:Int) {
+    init(frame:CGRect, peerIndex:Int) {
     
         super.init(frame: frame)
-        self.playerIndex = playerIndex
-        
-        if playerIndex == 1 {
+    
+        if peerIndex == 0 {
             self.image = UIImage(named: "laser_blue")
-        } else if playerIndex == 2 {
+            self.direction = 1
+        } else if peerIndex == 1 {
             self.image = UIImage(named: "laser_red")
+            self.direction = -1
         }
         
         print("LaserView init frame, playerIdx")

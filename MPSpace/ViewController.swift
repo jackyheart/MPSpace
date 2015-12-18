@@ -164,7 +164,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     
         let ship = self.shipArray[peerIndex]
         
-        let laserView = LaserView(frame: CGRectMake(0, 0, 10, 70), playerIndex: 1)
+        let laserView = LaserView(frame: CGRectMake(0, 0, 10, 70), peerIndex: peerIndex)
         laserView.backgroundColor = UIColor.whiteColor()
         laserView.center = CGPointMake(ship.center.x, ship.center.y - 20)
         laserView.tag = ship.tag
@@ -228,17 +228,20 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             
         case .Connecting:
             print("Connecting..")
+            //print("peers count: \(session.connectedPeers.count)")
             
-            print("peers count: \(session.connectedPeers.count)")
+            /*
             if (session.connectedPeers.count > 0){
                 
                 let index = self.session.connectedPeers.indexOf(peerID)!
                 print("index: \(index)")
             }
+            */
             break
             
         case .Connected:
             print("Connected..")
+            print("peers count: \(session.connectedPeers.count)")
             
             if (session.connectedPeers.count > 0){
                 let index = self.session.connectedPeers.indexOf(peerID)!
@@ -251,7 +254,6 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                             
                             let ship = self.shipArray[index]
                             ship.connected(peerID)//connect peer !
-                            
                             
                             if self.gameTimer == nil {
                                 
@@ -304,31 +306,43 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             
             let dataDict:NSDictionary = NSKeyedUnarchiver.unarchiveObjectWithData(data) as! NSDictionary
             
-            let action = dataDict["type"] as! String
+            print("didReceiveData \(dataDict["action"]) from peer:\(peerID.displayName)")
             
-            if action == "move" {
-            
-                let touchDistance = dataDict["touchDistance"] as! Float
-                let touchAngle = dataDict["touchAngle"] as! Float
+            if peerIndex != nil && self.gameTimer != nil {
+
+                let action = dataDict["action"] as! String
                 
-                if peerIndex != nil {
+                //print("receive action \(action) from peer: \(peerID.displayName)")
+                
+                if action == "move" {
                     
+                    print("receive move from peer: \(peerID.displayName)")
+                
+                    let touchDistance = dataDict["touchDistance"] as! Float
+                    let touchAngle = dataDict["touchAngle"] as! Float
+
                     if peerIndex == 0 {
-                    
                         self.CONTROLLER1_OFFSET.x = CGFloat(touchDistance/10.0 * cosf(touchAngle))
                         self.CONTROLLER1_OFFSET.y = CGFloat(touchDistance/10.0 * sinf(touchAngle))
                         
                     } else if peerIndex == 1 {
-                    
                         self.CONTROLLER2_OFFSET.x = CGFloat(touchDistance/10.0 * cosf(touchAngle))
                         self.CONTROLLER2_OFFSET.y = CGFloat(touchDistance/10.0 * sinf(touchAngle))
                     }
-                }
+                } else if action == "fire" {
                 
-            } else if action == "button" {
-            
-                //self.laserSoundPlayer.play()
-                self.shootLaserByPeerIndex(peerIndex!)
+                    //self.laserSoundPlayer.play()
+                    self.shootLaserByPeerIndex(peerIndex!)
+                }
+                else if action == "release" {
+                    
+                    if peerIndex == 0 {
+                        self.CONTROLLER1_OFFSET = CGPointZero
+                    }
+                    else if peerIndex == 1 {
+                        self.CONTROLLER2_OFFSET = CGPointZero
+                    }
+                }
             }
         }
     }
@@ -356,7 +370,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
 
         if self.shipArray.count >= self.session.connectedPeers.count {
             
-            var idx = 0;
+            var idx:Int = 0;
             for peerID in self.session.connectedPeers {
                 
                 let ship = self.shipArray[idx];
@@ -367,12 +381,10 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                     var offsetY = self.CONTROLLER1_OFFSET.y
                     
                     if idx == 1 {
-                    
                         offsetX = self.CONTROLLER2_OFFSET.x
                         offsetY = self.CONTROLLER2_OFFSET.y
                     }
                     
-                
                     //Check boundaries
                     if CGRectContainsRect(self.view.frame, ship.frame) {
                     
@@ -381,11 +393,10 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                             ship.center.y - CGFloat(offsetY))
                         
                     } else {
-                    
+                        
                         ship.center = CGPointMake(
                             ship.center.x + CGFloat(offsetX),
                             ship.center.y + CGFloat(offsetY))
-                        
                         
                         if idx == 0 {
                             self.CONTROLLER1_OFFSET.x = -offsetX * 0.5
@@ -395,7 +406,6 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                             self.CONTROLLER2_OFFSET.y = -offsetY * 0.5
                         }
                     }
-                    
                     
                     //Check collision between ships
                     if CGRectIntersectsRect(self.shipArray[0].frame, self.shipArray[1].frame) {
@@ -414,8 +424,6 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                             self.CONTROLLER2_OFFSET.y = -offsetY * 0.5
                         }
                     }
-                    
-                    break
                 }
                 
                 idx++;
