@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		854B50301C28ED3D0004281D /* starwars.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 854B502F1C28ED3D0004281D /* starwars.mp3 */; };
 		89043E561C205201001B6032 /* BadaBoom BB.TTF in Resources */ = {isa = PBXBuildFile; fileRef = 89043E551C205201001B6032 /* BadaBoom BB.TTF */; };
 		890D7D721C185D00002885BF /* LaserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 890D7D711C185D00002885BF /* LaserView.swift */; };
 		890D7D741C186A0B002885BF /* LaserImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 890D7D731C186A0B002885BF /* LaserImageView.swift */; };
@@ -21,6 +22,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		854B502F1C28ED3D0004281D /* starwars.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = starwars.mp3; sourceTree = "<group>"; };
 		89043E551C205201001B6032 /* BadaBoom BB.TTF */ = {isa = PBXFileReference; lastKnownFileType = file; path = "BadaBoom BB.TTF"; sourceTree = "<group>"; };
 		890D7D711C185D00002885BF /* LaserView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LaserView.swift; sourceTree = "<group>"; };
 		890D7D731C186A0B002885BF /* LaserImageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LaserImageView.swift; sourceTree = "<group>"; };
@@ -59,6 +61,7 @@
 			isa = PBXGroup;
 			children = (
 				894C31121C12F47F0077619B /* blaster.wav */,
+				854B502F1C28ED3D0004281D /* starwars.mp3 */,
 				894C31131C12F47F0077619B /* explosion.wav */,
 			);
 			path = sfx;
@@ -160,6 +163,7 @@
 				894C31141C12F47F0077619B /* blaster.wav in Resources */,
 				89CB67061C0F1D9B00845E25 /* LaunchScreen.storyboard in Resources */,
 				89CB67031C0F1D9B00845E25 /* Assets.xcassets in Resources */,
+				854B50301C28ED3D0004281D /* starwars.mp3 in Resources */,
 				89043E561C205201001B6032 /* BadaBoom BB.TTF in Resources */,
 				89CB67011C0F1D9B00845E25 /* Main.storyboard in Resources */,
 			);

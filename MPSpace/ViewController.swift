@@ -41,10 +41,11 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     var shipArray:[Ship] = []
     var laserArray:[LaserView] = []
     var laserSoundPlayer:AVAudioPlayer! = nil;
+    var explosionSoundPlayer:AVAudioPlayer! = nil;
+    var mainTheme:AVAudioPlayer! = nil;
     var gameTimer:NSTimer! = nil;
     var CONTROLLER1_OFFSET:CGPoint = CGPointZero;
     var CONTROLLER2_OFFSET:CGPoint = CGPointZero;
-    //var explosionSprite:UIImage! = nil
     var explosionSpriteArray:[UIImage] = []
     
     override func viewDidLoad() {
@@ -74,8 +75,14 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         //Rotate UIImageView (ship 2)
         ship2.transform = CGAffineTransformMakeRotation(180.0.degreesToRadians);
         
+        //explosion sprites
+        for (var i:Int = 0; i < 4; i++) {
+            
+            let image = UIImage(named: "exp\(i)")!
+            self.explosionSpriteArray.append(image)
+        }
         
-        //Sfx
+        //Sfx (laser)
         let laserFilePath = NSBundle.mainBundle().pathForResource("blaster", ofType: "wav")!
         let laserURL = NSURL(fileURLWithPath: laserFilePath)
         
@@ -86,12 +93,16 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             print("error open laser sound file: \(error)")
         }
         
-        for (var i:Int = 0; i < 4; i++) {
-            
-            let image = UIImage(named: "exp\(i)")!
-            self.explosionSpriteArray.append(image)
-        }
+        //Sfx (explosion)
+        let explosionFilePath = NSBundle.mainBundle().pathForResource("explosion", ofType: "wav")!
+        let explosionURL = NSURL(fileURLWithPath: explosionFilePath)
         
+        do {
+            try self.explosionSoundPlayer = AVAudioPlayer(contentsOfURL: explosionURL)
+            self.explosionSoundPlayer.prepareToPlay()
+        } catch {
+            print("error open explosion sound file: \(error)")
+        }
         
         //Multipeer Connectivity
         
@@ -156,24 +167,35 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             
             i++
         }
+        
+        //Start theme !
+        startMainTheme()
     }
     
     //MARK: - Functions
     
     func shootLaserByPeerIndex(peerIndex:Int) {
     
-        let ship = self.shipArray[peerIndex]
-        
-        let laserView = LaserView(frame: CGRectMake(0, 0, 10, 70), peerIndex: peerIndex)
-        laserView.backgroundColor = UIColor.whiteColor()
-        laserView.center = CGPointMake(ship.center.x, ship.center.y - 20)
-        laserView.tag = ship.tag
-        self.laserArray.append(laserView)
-        
-        self.view.addSubview(laserView)
+        if self.session.connectedPeers.count == 2 {
+            
+            //sfx
+            self.laserSoundPlayer.play()
+            
+            //laser
+            let ship = self.shipArray[peerIndex]
+            let laserView = LaserView(frame: CGRectMake(0, 0, 10, 70), peerIndex: peerIndex)
+            laserView.backgroundColor = UIColor.whiteColor()
+            laserView.center = CGPointMake(ship.center.x, ship.center.y - 20)
+            laserView.tag = ship.tag
+            self.laserArray.append(laserView)
+            
+            self.view.addSubview(laserView)
+        }
     }
     
     func explodeAtPoint(point:CGPoint) {
+        
+        self.explosionSoundPlayer.play()
         
         let explosionFrame = CGRectMake(point.x - 0.5 * 150, (point.y - 0.5 * 115) + 10, 150, 115)
         let explosionImgView = UIImageView(frame: explosionFrame)
@@ -246,25 +268,29 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             if (session.connectedPeers.count > 0){
                 let index = self.session.connectedPeers.indexOf(peerID)!
                 
-                    dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                    
+                    print("connected dispatch main queue")
+                    
+                    if self.shipArray.count > index {
                         
-                        print("connected dispatch main queue")
+                        let ship = self.shipArray[index]
+                        ship.connected(peerID)//connect peer !
                         
-                        if self.shipArray.count > index {
+                        if self.gameTimer == nil {
                             
-                            let ship = self.shipArray[index]
-                            ship.connected(peerID)//connect peer !
+                            print("start timer game loop !!!")
                             
-                            if self.gameTimer == nil {
-                                
-                                print("start timer game loop !!!")
-                                
-                                self.gameTimer = NSTimer.scheduledTimerWithTimeInterval(1/30.0, target: self, selector: "mainGameLoop", userInfo: nil, repeats: true)
-                            }
+                            self.gameTimer = NSTimer.scheduledTimerWithTimeInterval(1/30.0, target: self, selector: "mainGameLoop", userInfo: nil, repeats: true)
                         }
-                    })
+                    }
+                })
 
                 print("index: \(index)")
+                
+                if session.connectedPeers.count == 2 {
+                    self.startMainTheme()
+                }
             }
             break
             
@@ -306,7 +332,8 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             
             let dataDict:NSDictionary = NSKeyedUnarchiver.unarchiveObjectWithData(data) as! NSDictionary
             
-            print("didReceiveData \(dataDict["action"]) from peer:\(peerID.displayName)")
+            //print("didReceiveData \(dataDict["action"]) from peer:\(peerID.displayName)")
+            print("didReceiveData from peerIdx:\(peerIndex) name:\(peerID.displayName)")
             
             if peerIndex != nil && self.gameTimer != nil {
 
@@ -326,12 +353,11 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                         self.CONTROLLER1_OFFSET.y = CGFloat(touchDistance/10.0 * sinf(touchAngle))
                         
                     } else if peerIndex == 1 {
-                        self.CONTROLLER2_OFFSET.x = CGFloat(touchDistance/10.0 * cosf(touchAngle))
-                        self.CONTROLLER2_OFFSET.y = CGFloat(touchDistance/10.0 * sinf(touchAngle))
+                        self.CONTROLLER2_OFFSET.x = -CGFloat(touchDistance/10.0 * cosf(touchAngle))
+                        self.CONTROLLER2_OFFSET.y = -CGFloat(touchDistance/10.0 * sinf(touchAngle))
                     }
                 } else if action == "fire" {
-                
-                    //self.laserSoundPlayer.play()
+                    
                     self.shootLaserByPeerIndex(peerIndex!)
                 }
                 else if action == "release" {
@@ -368,6 +394,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         
         //print("gameLoop")
 
+        /*
         if self.shipArray.count >= self.session.connectedPeers.count {
             
             var idx:Int = 0;
@@ -429,6 +456,10 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                 idx++;
             }
         }
+        */
+        
+        self.moveShip(self.shipArray[0])
+        self.moveShip(self.shipArray[1])
         
         var i:Int = 0
         for laserView in self.laserArray {
@@ -483,6 +514,86 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             }
             
             i++
+        }
+    }
+    
+    //MARK: - Helper
+    
+    func moveShip(ship:Ship) {
+    
+        if ship.peerID != nil {
+            
+            let peerIdx = self.session.connectedPeers.indexOf(ship.peerID)
+            
+            var offsetX = self.CONTROLLER1_OFFSET.x
+            var offsetY = self.CONTROLLER1_OFFSET.y
+            
+            if peerIdx == 1 {
+                offsetX = self.CONTROLLER2_OFFSET.x
+                offsetY = self.CONTROLLER2_OFFSET.y
+            }
+            
+            //Check boundaries
+            if CGRectContainsRect(self.view.frame, ship.frame) {
+                
+                ship.center = CGPointMake(
+                    ship.center.x - CGFloat(offsetX),
+                    ship.center.y - CGFloat(offsetY))
+                
+            } else {
+                
+                ship.center = CGPointMake(
+                    ship.center.x + CGFloat(offsetX),
+                    ship.center.y + CGFloat(offsetY))
+                
+                if peerIdx == 0 {
+                    self.CONTROLLER1_OFFSET.x = -offsetX * 0.5
+                    self.CONTROLLER1_OFFSET.y = -offsetY * 0.5
+                } else if peerIdx == 1 {
+                    self.CONTROLLER2_OFFSET.x = -offsetX * 0.5
+                    self.CONTROLLER2_OFFSET.y = -offsetY * 0.5
+                }
+            }
+            
+            //Check collision between ships
+            if CGRectIntersectsRect(self.shipArray[0].frame, self.shipArray[1].frame) {
+                
+                print("plane intersects !")
+                
+                ship.center = CGPointMake(
+                    ship.center.x + CGFloat(offsetX),
+                    ship.center.y + CGFloat(offsetY))
+                
+                if peerIdx == 0 {
+                    self.CONTROLLER1_OFFSET.x = -offsetX * 0.5
+                    self.CONTROLLER1_OFFSET.y = -offsetY * 0.5
+                } else if peerIdx == 1 {
+                    self.CONTROLLER2_OFFSET.x = -offsetX * 0.5
+                    self.CONTROLLER2_OFFSET.y = -offsetY * 0.5
+                }
+            }
+        }
+    }
+    
+    func startMainTheme() {
+    
+        if self.mainTheme == nil {
+            
+            //main theme
+            let themeFilePath = NSBundle.mainBundle().pathForResource("starwars", ofType: "mp3")!
+            let themeURL = NSURL(fileURLWithPath: themeFilePath)
+            
+            do {
+                try self.mainTheme = AVAudioPlayer(contentsOfURL: themeURL)
+                self.mainTheme.prepareToPlay()
+                self.mainTheme.play()
+            } catch {
+                print("error open main theme sound file: \(error)")
+            }
+        } else {
+            self.mainTheme.stop()
+            self.mainTheme.prepareToPlay()
+            self.mainTheme.play()
         }
     }
 }
