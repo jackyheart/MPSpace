@@ -37,13 +37,13 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     var session:MCSession! = nil
     var browser:MCBrowserViewController!
     var advertiser:MCAdvertiserAssistant! = nil
-    private var isAdvertising:Bool = false
+    fileprivate var isAdvertising:Bool = false
     var shipArray:[Ship] = []
     var laserArray:[LaserView] = []
     var laserSoundPlayer:AVAudioPlayer! = nil;
-    var gameTimer:NSTimer! = nil;
-    var CONTROLLER1_OFFSET:CGPoint = CGPointZero;
-    var CONTROLLER2_OFFSET:CGPoint = CGPointZero;
+    var gameTimer:Timer! = nil;
+    var CONTROLLER1_OFFSET:CGPoint = CGPoint.zero;
+    var CONTROLLER2_OFFSET:CGPoint = CGPoint.zero;
     //var explosionSprite:UIImage! = nil
     var explosionSpriteArray:[UIImage] = []
     
@@ -56,37 +56,37 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         
         //Player 1
         let offsetY:CGFloat = 150
-        let center1 = CGPointMake(self.view.frame.size.width * 0.5, self.view.frame.size.height - offsetY)
-        let ship1 = Ship(frame: CGRectMake(0, 0, 150, 150), imageName: "xwing")
+        let center1 = CGPoint(x: self.view.frame.size.width * 0.5, y: self.view.frame.size.height - offsetY)
+        let ship1 = Ship(frame: CGRect(x: 0, y: 0, width: 150, height: 150), imageName: "xwing")
         ship1.center = center1
         ship1.tag = TAG_PLAYER1
         self.view.addSubview(ship1)
         self.shipArray.append(ship1)
         
         //Player 2
-        let center2 = CGPointMake(self.view.frame.size.width * 0.5, offsetY)
-        let ship2 = Ship(frame: CGRectMake(0, 0, 150, 150), imageName: "falcon")
+        let center2 = CGPoint(x: self.view.frame.size.width * 0.5, y: offsetY)
+        let ship2 = Ship(frame: CGRect(x: 0, y: 0, width: 150, height: 150), imageName: "falcon")
         ship2.center = center2
         ship2.tag = TAG_PLAYER2
         self.view.addSubview(ship2)
         self.shipArray.append(ship2)
         
         //Rotate UIImageView (ship 2)
-        ship2.transform = CGAffineTransformMakeRotation(180.0.degreesToRadians);
+        ship2.transform = CGAffineTransform(rotationAngle: 180.0.degreesToRadians);
         
         
         //Sfx
-        let laserFilePath = NSBundle.mainBundle().pathForResource("blaster", ofType: "wav")!
-        let laserURL = NSURL(fileURLWithPath: laserFilePath)
+        let laserFilePath = Bundle.main.path(forResource: "blaster", ofType: "wav")!
+        let laserURL = URL(fileURLWithPath: laserFilePath)
         
         do {
-            try self.laserSoundPlayer = AVAudioPlayer(contentsOfURL: laserURL)
+            try self.laserSoundPlayer = AVAudioPlayer(contentsOf: laserURL)
             self.laserSoundPlayer.prepareToPlay()
         } catch {
             print("error open laser sound file: \(error)")
         }
         
-        for (var i:Int = 0; i < 4; i++) {
+        for i in 0 ..< 4 {
             
             let image = UIImage(named: "exp\(i)")!
             self.explosionSpriteArray.append(image)
@@ -96,8 +96,8 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         //Multipeer Connectivity
         
         //session
-        self.myPeerID = MCPeerID(displayName: UIDevice.currentDevice().name)
-        self.session = MCSession(peer: self.myPeerID, securityIdentity: nil, encryptionPreference: .Required)
+        self.myPeerID = MCPeerID(displayName: UIDevice.current.name)
+        self.session = MCSession(peer: self.myPeerID, securityIdentity: nil, encryptionPreference: .required)
         self.session.delegate = self
         self.advertiser = MCAdvertiserAssistant(serviceType: kServiceType, discoveryInfo: nil, session: self.session)
         
@@ -107,10 +107,10 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         self.advertiser.start()
         
         //UI
-        self.gameOverScreen.hidden = true
+        self.gameOverScreen.isHidden = true
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
     }
 
@@ -122,22 +122,22 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     //MARK: - IBActions
 
     //TODO: Testing
-    @IBAction func laserTapped(sender: AnyObject) {
+    @IBAction func laserTapped(_ sender: AnyObject) {
         
         self.shootLaserByPeerIndex(TAG_PLAYER1 - 1)
     }
     
-    @IBAction func restart(sender: AnyObject) {
+    @IBAction func restart(_ sender: AnyObject) {
     
         //Restart game
         
-        self.gameOverScreen.hidden = true
+        self.gameOverScreen.isHidden = true
         
-        self.gameTimer = NSTimer.scheduledTimerWithTimeInterval(1/30.0, target: self, selector: "mainGameLoop", userInfo: nil, repeats: true)
+        self.gameTimer = Timer.scheduledTimer(timeInterval: 1/30.0, target: self, selector: #selector(ViewController.mainGameLoop), userInfo: nil, repeats: true)
         
         var i:Int = 0
         let offsetY:CGFloat = 150
-        var center = CGPointZero
+        var center = CGPoint.zero
         
         for ship in self.shipArray {
         
@@ -145,37 +145,37 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             
             if i == 0 {
             
-                center = CGPointMake(self.view.frame.size.width * 0.5, self.view.frame.size.height - offsetY)
+                center = CGPoint(x: self.view.frame.size.width * 0.5, y: self.view.frame.size.height - offsetY)
             }
             else if i == 1 {
                 
-                center = CGPointMake(self.view.frame.size.width * 0.5, offsetY)
+                center = CGPoint(x: self.view.frame.size.width * 0.5, y: offsetY)
             }
             
             ship.center = center
             
-            i++
+            i += 1
         }
     }
     
     //MARK: - Functions
     
-    func shootLaserByPeerIndex(peerIndex:Int) {
+    func shootLaserByPeerIndex(_ peerIndex:Int) {
     
         let ship = self.shipArray[peerIndex]
         
-        let laserView = LaserView(frame: CGRectMake(0, 0, 10, 70), playerIndex: 1)
-        laserView.backgroundColor = UIColor.whiteColor()
-        laserView.center = CGPointMake(ship.center.x, ship.center.y - 20)
+        let laserView = LaserView(frame: CGRect(x: 0, y: 0, width: 10, height: 70), playerIndex: 1)
+        laserView.backgroundColor = UIColor.white
+        laserView.center = CGPoint(x: ship.center.x, y: ship.center.y - 20)
         laserView.tag = ship.tag
         self.laserArray.append(laserView)
         
         self.view.addSubview(laserView)
     }
     
-    func explodeAtPoint(point:CGPoint) {
+    func explodeAtPoint(_ point:CGPoint) {
         
-        let explosionFrame = CGRectMake(point.x - 0.5 * 150, (point.y - 0.5 * 115) + 10, 150, 115)
+        let explosionFrame = CGRect(x: point.x - 0.5 * 150, y: (point.y - 0.5 * 115) + 10, width: 150, height: 115)
         let explosionImgView = UIImageView(frame: explosionFrame)
         explosionImgView.image = explosionSpriteArray[0]
         explosionImgView.animationImages = explosionSpriteArray
@@ -184,8 +184,8 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         explosionImgView.startAnimating()
         self.view.addSubview(explosionImgView)
         
-        let popTime = dispatch_time(DISPATCH_TIME_NOW, Int64(explosionImgView.animationDuration) * Int64(NSEC_PER_SEC))
-        dispatch_after(popTime, dispatch_get_main_queue()) { () -> Void in
+        let popTime = DispatchTime.now() + Double(Int64(explosionImgView.animationDuration) * Int64(NSEC_PER_SEC)) / Double(NSEC_PER_SEC)
+        DispatchQueue.main.asyncAfter(deadline: popTime) { () -> Void in
             
             explosionImgView.stopAnimating()
             explosionImgView.removeFromSuperview()
@@ -194,7 +194,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     
     //MARK: - MCAdvertiserAssistantDelegate
     
-    func advertiserAssistantDidDismissInvitation(advertiserAssistant: MCAdvertiserAssistant) {
+    func advertiserAssistantDidDismissInvitation(_ advertiserAssistant: MCAdvertiserAssistant) {
         
         print("advertiserAssistantDidDismissInvitation")
         print("connectedPeers: \(self.session.connectedPeers)")
@@ -202,48 +202,48 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
     
     //MARK: - MCBrowserViewControllerDelegate
     
-    func browserViewControllerDidFinish(browserViewController: MCBrowserViewController) {
+    func browserViewControllerDidFinish(_ browserViewController: MCBrowserViewController) {
         
-        self.browser.dismissViewControllerAnimated(true, completion: nil)
+        self.browser.dismiss(animated: true, completion: nil)
     }
     
-    func browserViewControllerWasCancelled(browserViewController: MCBrowserViewController) {
+    func browserViewControllerWasCancelled(_ browserViewController: MCBrowserViewController) {
         
-        self.browser.dismissViewControllerAnimated(true, completion: nil)
+        self.browser.dismiss(animated: true, completion: nil)
     }
     
     //MARK: - MCSessionDelegate
     
-    func session(session: MCSession, didReceiveCertificate certificate: [AnyObject]?, fromPeer peerID: MCPeerID, certificateHandler: (Bool) -> Void) {
+    func session(_ session: MCSession, didReceiveCertificate certificate: [Any]?, fromPeer peerID: MCPeerID, certificateHandler: @escaping (Bool) -> Void) {
         
         return certificateHandler(true)
     }
     
-    func session(session: MCSession, peer peerID: MCPeerID, didChangeState state: MCSessionState) {
+    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         
         print("myPeerID: \(self.session.myPeerID)")
         print("connectd peerID: \(peerID)")
         
         switch state {
             
-        case .Connecting:
+        case .connecting:
             print("Connecting..")
             
             print("peers count: \(session.connectedPeers.count)")
             if (session.connectedPeers.count > 0){
                 
-                let index = self.session.connectedPeers.indexOf(peerID)!
+                let index = self.session.connectedPeers.index(of: peerID)!
                 print("index: \(index)")
             }
             break
             
-        case .Connected:
+        case .connected:
             print("Connected..")
             
             if (session.connectedPeers.count > 0){
-                let index = self.session.connectedPeers.indexOf(peerID)!
+                let index = self.session.connectedPeers.index(of: peerID)!
                 
-                    dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                    DispatchQueue.main.async(execute: { () -> Void in
                         
                         print("connected dispatch main queue")
                         
@@ -257,7 +257,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                                 
                                 print("start timer game loop !!!")
                                 
-                                self.gameTimer = NSTimer.scheduledTimerWithTimeInterval(1/30.0, target: self, selector: "mainGameLoop", userInfo: nil, repeats: true)
+                                self.gameTimer = Timer.scheduledTimer(timeInterval: 1/30.0, target: self, selector: #selector(ViewController.mainGameLoop), userInfo: nil, repeats: true)
                             }
                         }
                     })
@@ -266,12 +266,12 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
             }
             break
             
-        case .NotConnected:
+        case .notConnected:
             
             print("Not Connected..")
             print("peers count: \(session.connectedPeers.count)")
             
-            dispatch_async(dispatch_get_main_queue(), { () -> Void in
+            DispatchQueue.main.async(execute: { () -> Void in
                 
                 
                 var index = 0
@@ -286,7 +286,7 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                         }
                     }
                     
-                    index++
+                    index += 1
                 }
             })
             
@@ -294,15 +294,15 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
         }
     }
     
-    func session(session: MCSession, didReceiveData data: NSData, fromPeer peerID: MCPeerID) {
+    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         
-        dispatch_async(dispatch_get_main_queue()) { () -> Void in
+        DispatchQueue.main.async { () -> Void in
             
             //Do animation on main thread
             
-            let peerIndex = self.session.connectedPeers.indexOf(peerID)
+            let peerIndex = self.session.connectedPeers.index(of: peerID)
             
-            let dataDict:NSDictionary = NSKeyedUnarchiver.unarchiveObjectWithData(data) as! NSDictionary
+            let dataDict:NSDictionary = NSKeyedUnarchiver.unarchiveObject(with: data) as! NSDictionary
             
             let action = dataDict["type"] as! String
             
@@ -327,23 +327,23 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                 
             } else if action == "button" {
             
-                //self.laserSoundPlayer.play()
+                self.laserSoundPlayer.play()
                 self.shootLaserByPeerIndex(peerIndex!)
             }
         }
     }
     
-    func session(session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, withProgress progress: NSProgress) {
+    func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
         
         print("table didStartReceivingResourceWithName")
     }
     
-    func session(session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, atURL localURL: NSURL, withError error: NSError?) {
+    func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL, withError error: Error?) {
         
         print("table didFinishReceivingResourceWithName")
     }
     
-    func session(session: MCSession, didReceiveStream stream: NSInputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
+    func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
         
         print("table didReceiveStream")
     }
@@ -374,17 +374,17 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                     
                 
                     //Check boundaries
-                    if CGRectContainsRect(self.view.frame, ship.frame) {
+                    if self.view.frame.contains(ship.frame) {
                     
-                        ship.center = CGPointMake(
-                            ship.center.x - CGFloat(offsetX),
-                            ship.center.y - CGFloat(offsetY))
+                        ship.center = CGPoint(
+                            x: ship.center.x - CGFloat(offsetX),
+                            y: ship.center.y - CGFloat(offsetY))
                         
                     } else {
                     
-                        ship.center = CGPointMake(
-                            ship.center.x + CGFloat(offsetX),
-                            ship.center.y + CGFloat(offsetY))
+                        ship.center = CGPoint(
+                            x: ship.center.x + CGFloat(offsetX),
+                            y: ship.center.y + CGFloat(offsetY))
                         
                         
                         if idx == 0 {
@@ -398,13 +398,13 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                     
                     
                     //Check collision between ships
-                    if CGRectIntersectsRect(self.shipArray[0].frame, self.shipArray[1].frame) {
+                    if self.shipArray[0].frame.intersects(self.shipArray[1].frame) {
                     
                         print("plane intersects !")
                         
-                        ship.center = CGPointMake(
-                            ship.center.x + CGFloat(offsetX),
-                            ship.center.y + CGFloat(offsetY))
+                        ship.center = CGPoint(
+                            x: ship.center.x + CGFloat(offsetX),
+                            y: ship.center.y + CGFloat(offsetY))
                         
                         if idx == 0 {
                             self.CONTROLLER1_OFFSET.x = -offsetX * 0.5
@@ -418,28 +418,28 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                     break
                 }
                 
-                idx++;
+                idx += 1;
             }
         }
         
         var i:Int = 0
         for laserView in self.laserArray {
 
-            laserView.center = CGPointMake(laserView.center.x, laserView.center.y - (laserView.direction * 10))
+            laserView.center = CGPoint(x: laserView.center.x, y: laserView.center.y - (laserView.direction * 10))
             
-            if (!CGRectContainsRect(self.view.bounds, laserView.frame))
+            if (!self.view.bounds.contains(laserView.frame))
             {
                 if i < self.laserArray.count {
                     //laser is out-of-bound, remove
                     laserView.removeFromSuperview()
-                    self.laserArray.removeAtIndex(i)
+                    self.laserArray.remove(at: i)
                 }
             }
             
             var shipIdx = 0
             for ship in shipArray {
             
-                if CGRectIntersectsRect(ship.frame, laserView.frame) {
+                if ship.frame.intersects(laserView.frame) {
                     
                     if ship.tag != laserView.tag {
                         
@@ -448,14 +448,14 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                         
                         //laser is out-of-bound, remove
                         laserView.removeFromSuperview()
-                        self.laserArray.removeAtIndex(i)
+                        self.laserArray.remove(at: i)
                         ship.health -= HEALTH_DECREMENT
                         
                         if ship.health <= 0 {
                             self.gameTimer.invalidate()
                             self.gameTimer = nil
                             
-                            self.gameOverScreen.hidden = false
+                            self.gameOverScreen.isHidden = false
                             
                             if shipIdx == 0 {
                             
@@ -471,10 +471,10 @@ class ViewController: UIViewController, MCAdvertiserAssistantDelegate, MCBrowser
                     }
                 }
                 
-                shipIdx++
+                shipIdx += 1
             }
             
-            i++
+            i += 1
         }
     }
 }

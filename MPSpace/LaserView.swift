@@ -13,9 +13,9 @@ class LaserView: UIImageView {
     
     @IBInspectable var shadowRadius:CGFloat = 0.4
     @IBInspectable var shadowOpacity:Float = 0.9
-    @IBInspectable var shadowOffset:CGSize = CGSizeMake(0.0, -3.0);
+    @IBInspectable var shadowOffset:CGSize = CGSize(width: 0.0, height: -3.0);
     var direction:CGFloat = 1
-    private var playerIndex = 1
+    fileprivate var playerIndex = 1
 
     //cyan: A3EEFF
     

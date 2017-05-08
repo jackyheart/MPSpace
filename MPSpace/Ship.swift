@@ -12,8 +12,8 @@ import MultipeerConnectivity
 class Ship: UIView {
 
     var peerID:MCPeerID! = nil
-    private var nameLbl:UILabel! = nil
-    private var healthLbl:UILabel! = nil
+    fileprivate var nameLbl:UILabel! = nil
+    fileprivate var healthLbl:UILabel! = nil
     var health:Int = 100 {
     
         didSet {
@@ -40,29 +40,29 @@ class Ship: UIView {
         //ImageView
         let image = UIImage(named: imageName)!
         let imageView = UIImageView(image: image)
-        imageView.frame = CGRectMake(0, 0, 130, 130)
+        imageView.frame = CGRect(x: 0, y: 0, width: 130, height: 130)
         imageView.center = self.center
         self.addSubview(imageView)
         
         //Label (name)
         let offsetY_name:CGFloat = 90
-        let lblFrame = CGRectMake(0, 0, self.frame.size.width + 20, 20)
+        let lblFrame = CGRect(x: 0, y: 0, width: self.frame.size.width + 20, height: 20)
         let label = UILabel(frame: lblFrame)
         label.center =  CGPoint(x: self.center.x, y: self.center.y + offsetY_name)
         label.font = UIFont(name: label.font.fontName, size: 17)
-        label.textColor = UIColor.whiteColor()
-        label.textAlignment = .Center
+        label.textColor = UIColor.white
+        label.textAlignment = .center
         label.text = kTextNotConnected
         self.addSubview(label)
         self.nameLbl = label // assign to local variable (private var)
         
         let offsetY_health:CGFloat = 20
-        let lblFrame_health = CGRectMake(0, 0, self.frame.size.width + 20, 20)
+        let lblFrame_health = CGRect(x: 0, y: 0, width: self.frame.size.width + 20, height: 20)
         let label_health = UILabel(frame: lblFrame_health)
         label_health.center =  CGPoint(x: self.center.x, y: self.nameLbl.center.y + offsetY_health)
         label_health.font = UIFont(name: label.font.fontName, size: 17)
-        label_health.textColor = UIColor.whiteColor()
-        label_health.textAlignment = .Center
+        label_health.textColor = UIColor.white
+        label_health.textAlignment = .center
         label_health.text = String(health)
         self.addSubview(label_health)
         self.healthLbl = label_health // assign to local variable (private var)
@@ -72,7 +72,7 @@ class Ship: UIView {
         super.init(coder: aDecoder)
     }
     
-    func connected(peerID: MCPeerID) {
+    func connected(_ peerID: MCPeerID) {
     
         self.peerID = peerID
         self.nameLbl.text = peerID.displayName
